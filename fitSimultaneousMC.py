@@ -45,9 +45,13 @@ def imp(w_):
   return getattr(w_,'import')
 
 plot_labels = {
-    'smeared' : 'JER smeared',
-    'scaleUp' : 'JES Up',
-    'scaleDown' : 'JES Down',
+    'jer' : 'JER smeared',
+    'jes_up' : 'JES Up',
+    'jes_down' : 'JES Down',
+    'qscale_up' : 'Q^2 scale Up',
+    'qscale_down' : 'Q^2 scale Down',
+    'pdf_up' : 'PDF Up',
+    'pdf_down' : 'PDF Down',
     'smearedSJ' : 'SJ JER smeared',
     'scaleSJUp' : 'SJ JES Up',
     'scaleSJDown' : 'SJ JES Down',
@@ -64,11 +68,11 @@ plot_labels = {
 plot_postfix = ''
 plot_label = plot_labels[args.syst]
 if args.syst!='cent':
-  if args.syst=='smeared':
-    postfix = 'Smeared'
-  elif args.syst=='scaleUp':
+  if args.syst=='jer':
+    postfix = 'Resolution'
+  elif args.syst=='jes_up':
     postfix = 'ScaleUp'
-  elif args.syst=='scaleDown':
+  elif args.syst=='jes_down':
     postfix = 'ScaleDown'
   elif args.syst=='smearedSJ':
     postfix = 'Smeared_sj'
@@ -125,16 +129,22 @@ def build_sum_hist(cat,nprong):
   hsum = None
   for i in inputs[nprong]:
     if not hsum:
-      hsum = f.Get('h_%s%s_%s'%(args.masstag,postfix,i)).Clone('h_%s_%i'%(cat,nprong))
+      hsum = f.Get('h_%s_%s'%(args.masstag,i)).Clone('h_%s_%i'%(cat,nprong))
     else:
-      hsum.Add(f.Get('h_%s%s_%s'%(args.masstag,postfix,i)))
+      hsum.Add(f.Get('h_%s_%s'%(args.masstag,i)))
+
+  print "building sum for", cat
+  for i in xrange(hsum.GetNbinsX()+1):
+    #print hsum.GetBinContent(i)
+    if hsum.GetBinContent(i)==0:
+      hsum.SetBinContent(i,0.0001)
   return hsum
 
 # get histograms
-hdata[1] = ftemplate['pass'].Get('h_%s%s_Data'%(args.masstag,postfix))
+hdata[1] = ftemplate['pass'].Get('h_%s_Data'%(args.masstag))
 NBINS=hdata[1].GetNbinsX()
 dh_data[1] = root.RooDataHist('dh_data1','dh_data1',root.RooArgList(mass),hdata[1])
-hdata[0] = ftemplate['fail'].Get('h_%s%s_Data'%(args.masstag,postfix))
+hdata[0] = ftemplate['fail'].Get('h_%s_Data'%(args.masstag))
 dh_data[0] = root.RooDataHist('dh_data0','dh_data0',root.RooArgList(mass),hdata[0])
 
 for iC in [0,1]:
@@ -299,9 +309,9 @@ fitresult.Print("v")
 
 # dump the efficiencies
 pcat=(iPsig,1); fcat=(iPsig,0)
-masslo=110; masshi =210 # to get on binedges for now
+masslo=105; masshi =210 # to get on binedges for now
 if args.signal !='top':
-  masslo=70; masshi =110
+  masslo=65; masshi=105
 
 
 effMass_ = hprong[pcat].Integral(hprong[pcat].FindBin(masslo),hprong[pcat].FindBin(masshi)-1)/hprong[pcat].Integral() # prefit efficiency of the mass cut on the pass distribution

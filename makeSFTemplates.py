@@ -20,6 +20,7 @@ parser.add_argument('--shower',metavar='shower',type=str,default='pythia')
 parser.add_argument('--massvar',metavar='massvar',type=str,default='efnl1_ak8mass')
 parser.add_argument('--binning',metavar='binning',type=str,default='50,350,30')
 parser.add_argument('--matching',metavar='matching',type=str,default='POG')
+parser.add_argument('--syst',metavar='syst',type=str,default='none')
 args = parser.parse_args()
 
 figsdir = args.outdir+'/'+args.massvar+'/'+args.matching+'/'+args.disc+'_'+str(args.cut)+'/'+args.pt
@@ -55,7 +56,8 @@ elif args.sel=='photon':
   weight = '%f*normalizedWeight*sf_pu*sf_lep*%s*sf_tt*sf_phoTrig*0.93'%(lumi,nlo)
   label = 'photon_'
 else:
-  cut = ' efnl1_ak8pt > 250 && nvetolep<2 && passtriglepOR>0 && passmetfilters>0 && efnl1_leptonicwpt>250 '
+  #cut = ' efnl1_ak8pt > 250 && nvetolep<2 && passtriglepOR>0 && passmetfilters>0 && efnl1_leptonicwpt>250 '
+  cut = ' fj_pt > 250 && nvetolep<2 && passtriglepOR>0 && passmetfilters>0 && ptlepmet>250 '
   weight = '%f*weight*truePUWeight*btagWeight*topptWeight'%(lumi)
   label = 'tag_'
 
@@ -65,8 +67,10 @@ disclabels = {
     'top_ecfv7_bdt':'ECF+#tau_{32}^{SD} BDT',
     'top_ecfv8_bdt':'ECF+#tau_{32}^{SD}+f_{rec} BDT',
     'top_ecf_bdt':'ECF+#tau_{32}^{SD}+f_{rec} BDT',
-    'efnl1_ak8_nn_top':"Deep AK8 (top)",
-    'efnl1_ak8_nn_w':"Deep AK8 (W)",
+    'fj_nn_top':"Deep AK8 (top)",
+    'fj_nn_w':"Deep AK8 (W)",
+    'fj_decorr_nn_top':"Deep AK8 decor (top)",
+    'fj_decorr_nn_w':"Deep AK8 decor (W)",
     }
 
 label += args.disc+'_'
@@ -87,8 +91,11 @@ else:
     cut = tAND(cut,'%s<%f'%(args.disc,args.cut))
     plotlabel = '%s<%.2f'%(disclabels[args.disc],args.cut)
 
+if args.syst!='none':
+  label += args.syst+'_'
+
 if args.pt=='' or args.pt=='inc':
-  cut = tAND(cut,'efnl1_ak8pt>250 && efnl1_ak8pt<1000')
+  cut = tAND(cut,'fj_pt>250 && fj_pt<1000')
   plotlabel = '#splitline{%s}{250 < p_{T} < 1000 GeV}'%plotlabel
 elif args.pt=='lo':
   cut = tAND(cut,'efnl1_ak8pt>250 && efnl1_ak8pt<475')
@@ -102,6 +109,36 @@ elif args.pt=='hi':
 elif args.pt=='inch':
   cut = tAND(cut,'efnl1_ak8pt>400 && efnl1_ak8pt<1000')
   plotlabel = '#splitline{%s}{400 < p_{T} < 1000 GeV}'%plotlabel
+elif args.pt=='paperinct':
+  cut = tAND(cut,'fj_pt>300 && fj_pt<1200')
+  plotlabel = '#splitline{%s}{300 < p_{T} < 1200 GeV}'%plotlabel
+elif args.pt=='t1':
+  cut = tAND(cut,'fj_pt>300 && fj_pt<400')
+  plotlabel = '#splitline{%s}{300 < p_{T} < 400 GeV}'%plotlabel
+elif args.pt=='t2':
+  cut = tAND(cut,'fj_pt>400 && fj_pt<480')
+  plotlabel = '#splitline{%s}{400 < p_{T} < 480 GeV}'%plotlabel
+elif args.pt=='t3':
+  cut = tAND(cut,'fj_pt>480 && fj_pt<600')
+  plotlabel = '#splitline{%s}{480 < p_{T} < 600 GeV}'%plotlabel
+elif args.pt=='t4':
+  cut = tAND(cut,'fj_pt>600 && fj_pt<1200')
+  plotlabel = '#splitline{%s}{600 < p_{T} < 1200 GeV}'%plotlabel
+elif args.pt=='paperincw':
+  cut = tAND(cut,'fj_pt>200 && fj_pt<800')
+  plotlabel = '#splitline{%s}{200 < p_{T} < 800 GeV}'%plotlabel
+elif args.pt=='w1':
+  cut = tAND(cut,'fj_pt>200 && fj_pt<300')
+  plotlabel = '#splitline{%s}{200 < p_{T} < 300 GeV}'%plotlabel
+elif args.pt=='w2':
+  cut = tAND(cut,'fj_pt>300 && fj_pt<400')
+  plotlabel = '#splitline{%s}{300 < p_{T} < 400 GeV}'%plotlabel
+elif args.pt=='w3':
+  cut = tAND(cut,'fj_pt>400 && fj_pt<550')
+  plotlabel = '#splitline{%s}{400 < p_{T} < 550 GeV}'%plotlabel
+elif args.pt=='w4':
+  cut = tAND(cut,'fj_pt>550 && fj_pt<800')
+  plotlabel = '#splitline{%s}{550 < p_{T} < 800 GeV}'%plotlabel
 
 ### LOAD PLOTTING UTILITY ###
 plot = root.PlotUtility()
@@ -129,6 +166,10 @@ if args.matching=='POG':
   prong1.additionalCut = root.TCut("(!(efnl1_ak8drgenwq<0.8) && !(efnl1_ak8drgent<0.6 && efnl1_gendrqtop<0.6))"); prong1.Init("Events");
   prong2.additionalCut = root.TCut("(efnl1_ak8drgenwq<0.8 && !(efnl1_ak8drgent<0.6 && efnl1_gendrqtop<0.6))");prong2.Init("Events");
   prong3.additionalCut = root.TCut("(efnl1_ak8drgent<0.6 && efnl1_gendrqtop<0.6)");prong3.Init("Events");
+if args.matching=='TREE':
+  prong1.additionalCut = root.TCut("(fj_no_match)"); prong1.Init("Events");
+  prong2.additionalCut = root.TCut("(fj_w_match)");prong2.Init("Events");
+  prong3.additionalCut = root.TCut("(fj_top_match)");prong3.Init("Events");
 if args.matching=='POG8':
   prong1.additionalCut = root.TCut("(!(efnl1_ak8drgenwq<0.8) && !(efnl1_ak8drgent<0.8 && efnl1_gendrqtop<0.8))"); prong1.Init("Events");
   prong2.additionalCut = root.TCut("(efnl1_ak8drgenwq<0.8 && !(efnl1_ak8drgent<0.8 && efnl1_gendrqtop<0.8))");prong2.Init("Events");
@@ -177,28 +218,49 @@ else:
     label += 'herwig_'
     print label
   else:
+    if args.syst!='none' and args.syst!='herwig':
+      basedir=basedir.replace('lep','lep_'+args.syst)
+    print basedir
     prong1.AddFile(basedir+'qcd_tree.root')
     prong2.AddFile(basedir+'qcd_tree.root')
     prong3.AddFile(basedir+'qcd_tree.root')
-    prong1.AddFile(basedir+'tW_tree.root')
-    prong2.AddFile(basedir+'tW_tree.root')
-    prong3.AddFile(basedir+'tW_tree.root')
-    prong1.AddFile(basedir+'ttW_tree.root')
-    prong2.AddFile(basedir+'ttW_tree.root')
-    prong3.AddFile(basedir+'ttW_tree.root')
-    prong1.AddFile(basedir+'ttZ_tree.root')
-    prong2.AddFile(basedir+'ttZ_tree.root')
-    prong3.AddFile(basedir+'ttZ_tree.root')
-    prong1.AddFile(basedir+'ttbar_tree.root')
-    prong2.AddFile(basedir+'ttbar_tree.root')
-    prong3.AddFile(basedir+'ttbar_tree.root')
-    prong1.AddFile(basedir+'wjets_tree.root')
-    prong2.AddFile(basedir+'wjets_tree.root')
-    prong3.AddFile(basedir+'wjets_tree.root')
+    prong1.AddFile(basedir+'singletop_tree.root')
+    prong2.AddFile(basedir+'singletop_tree.root')
+    prong3.AddFile(basedir+'singletop_tree.root')
+    prong1.AddFile(basedir+'ttV_tree.root')
+    prong2.AddFile(basedir+'ttV_tree.root')
+    prong3.AddFile(basedir+'ttV_tree.root')
+    if args.syst!='herwig':
+      prong1.AddFile(basedir+'ttbar_tree.root')
+      prong2.AddFile(basedir+'ttbar_tree.root')
+      prong3.AddFile(basedir+'ttbar_tree.root')
+    else:
+      ttbd=basedir.replace('lep','lep_syst')
+      prong1.AddFile(ttbd+'ttbar-powheg-herwigpp_tree.root')
+      prong2.AddFile(ttbd+'ttbar-powheg-herwigpp_tree.root')
+      prong3.AddFile(ttbd+'ttbar-powheg-herwigpp_tree.root')     
+    prong1.AddFile(basedir+'wjets-nlo_tree.root')
+    prong2.AddFile(basedir+'wjets-nlo_tree.root')
+    prong3.AddFile(basedir+'wjets-nlo_tree.root')
+    prong1.AddFile(basedir+'ww_tree.root')
+    prong2.AddFile(basedir+'ww_tree.root')
+    prong3.AddFile(basedir+'ww_tree.root')
+    prong1.AddFile(basedir+'wz_tree.root')
+    prong2.AddFile(basedir+'wz_tree.root')
+    prong3.AddFile(basedir+'wz_tree.root')
+    prong1.AddFile(basedir+'zz_tree.root')
+    prong2.AddFile(basedir+'zz_tree.root')
+    prong3.AddFile(basedir+'zz_tree.root')
 
 #processes = [prong1,data]
 for p in processes:
   plot.AddProcess(p)
+
+if args.syst=='none':
+  for weightnum in xrange(109):
+    plot.AddSyst("systweights[%d]"%(weightnum),"systweights[%d]"%(weightnum), "systweights[%d]"%(weightnum))
+  
+
 
 plot.AddDistribution(root.Distribution(args.massvar,binlow,binhigh,binnr,'M_jet [GeV]','Events/%f GeV'%((binhigh-binlow)/binnr)))
 
