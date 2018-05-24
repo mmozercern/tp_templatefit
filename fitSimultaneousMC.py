@@ -62,7 +62,8 @@ plot_labels = {
     'mistagDown' : 'b-mistag Down',
     'mergeUp' : 'Merging radius Up',
     'mergeDown' : 'Merging radius Down',
-    'cent' : 'Nominal'
+    'cent' : 'Nominal',
+    'herwig' : 'alternative shower'
     }
 
 plot_postfix = ''

@@ -58,6 +58,8 @@ elif args.sel=='photon':
 else:
   #cut = ' efnl1_ak8pt > 250 && nvetolep<2 && passtriglepOR>0 && passmetfilters>0 && efnl1_leptonicwpt>250 '
   cut = ' fj_pt > 250 && nvetolep<2 && passtriglepOR>0 && passmetfilters>0 && ptlepmet>250 '
+  if '_w' in args.disc:
+    cut = ' fj_pt > 200 && nvetolep<2 && passtriglepOR>0 && passmetfilters>0 && ptlepmet>250 '
   weight = '%f*weight*truePUWeight*btagWeight*topptWeight'%(lumi)
   label = 'tag_'
 
@@ -134,11 +136,8 @@ elif args.pt=='w2':
   cut = tAND(cut,'fj_pt>300 && fj_pt<400')
   plotlabel = '#splitline{%s}{300 < p_{T} < 400 GeV}'%plotlabel
 elif args.pt=='w3':
-  cut = tAND(cut,'fj_pt>400 && fj_pt<550')
-  plotlabel = '#splitline{%s}{400 < p_{T} < 550 GeV}'%plotlabel
-elif args.pt=='w4':
-  cut = tAND(cut,'fj_pt>550 && fj_pt<800')
-  plotlabel = '#splitline{%s}{550 < p_{T} < 800 GeV}'%plotlabel
+  cut = tAND(cut,'fj_pt>400 && fj_pt<800')
+  plotlabel = '#splitline{%s}{400 < p_{T} < 800 GeV}'%plotlabel
 
 ### LOAD PLOTTING UTILITY ###
 plot = root.PlotUtility()

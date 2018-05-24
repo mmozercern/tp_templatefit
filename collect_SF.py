@@ -4,6 +4,8 @@ import math
 
 ROOT.gROOT.SetBatch(True)
 
+ROOT.gErrorIgnoreLevel=ROOT.kError
+
 WPs = ['loose','medium','tight','very_tight']
 particles = ['w','t']
 categories = {'t':['fj_nn_top','fj_decorr_nn_top'],
@@ -37,12 +39,12 @@ cutvals = { 'fj_nn_top' : {'loose':'0.1883',
 
 massvar ={ 'puppisd'   : 'fj_jmarcorr_sdmass'}
 
-syserrs = ['Resolution','ScaleUp','ScaleDown','qscale_up','qscale_down','pdf_up','pdf_down']
+syserrs = ['Resolution','ScaleUp','ScaleDown','qscale_up','qscale_down','pdf_up','pdf_down','herwig']
 
 constraintvals = { 'N': ['0']}
 
 massbins={'t':['t1','t2','t3','t4'],
-          'w':['w1','w2','w3','w4']
+          'w':['w1','w2','w3']
           }
 
 inclabels={'t':'paperinct',
@@ -55,8 +57,7 @@ ranges={ 't1':[300,400],
          't4':[600,1200],
          'w1':[200,300],
          'w2':[300,400],
-         'w3':[400,550],
-         'w4':[550,800]         
+         'w3':[400,800],
          }
 
 
@@ -84,7 +85,7 @@ def readfromfile(fname):
 
 def getscaletuple(cat,wp,ptrange):
     directory = dirprefix +'/'+cat+'_'+cutvals[cat][wp]+'/'
-    print 'reading nominal value from: ', directory
+    #print 'reading nominal value from: ', directory
     nominal=0. # central value + stat + syst errors
     stat=0.
     sysup=0.
@@ -116,14 +117,30 @@ for part in particles:
     graphs={}
     
     canvas = ROOT.TCanvas("c2","c2",50,50,600,600)
-   
+
+
     for cat in categories[part]:
+        print "\\begin{tabular}{ l | ",
+        numwps=3
+        for i in xrange(len(massbins[part])):
+            print " r@{\,}c@{\,}l@{\,}c@{\,}l ",
+        print '}'
+        print '\\multicolumn{',5*(len(massbins[part]))+1,'}{c}{Scale factors for ', cat.replace('_','\\_') ,' $\\pm$(stat.)$^+_-$(syst.)}\\\\'
+        print "\\hline"
+        print 'working point & \\multicolumn{',5*(len(massbins[part])),'}{c}{\\pt ranges [GeV]}\\\\'
+        for i in xrange(len(massbins[part])):
+            print "& \\multicolumn{5}{c}{",ranges[massbins[part][i]][0],"-",ranges[massbins[part][i]][1],'}',
+        print "\\\\"
+        print "\\hline"
+
         for wp in WPs:
             canvas.Clear()   
-    
+            
+            print wp.replace('_',' '),
+
         #inclusive scale factor
-            print 'inclusive for: ' + cat +' > ' +wp
-            print getscaletuple(cat,wp,inclabels[part])
+            #print 'inclusive for: ' + cat +' > ' +wp
+            #print getscaletuple(cat,wp,inclabels[part])
             inclusive_cent,inclusive_stat,inclusive_sysup,inclusive_sysdown=getscaletuple(cat,wp,inclabels[part])
 
         #scale factor
@@ -133,8 +150,8 @@ for part in particles:
             graphs[(cat,wp,'stat','unconstr')].SetFillColor(ROOT.kOrange)
             graphs[(cat,wp,'syst','unconstr')].SetFillColor(ROOT.kOrange-3)
             for i in xrange(len(massbins[part])):
-                print 'differential for: '+ massbins[part][i] +' ' + cat +' > ' +wp
-                print getscaletuple(cat,wp,massbins[part][i])
+                #print 'differential for: '+ massbins[part][i] +' ' + cat +' > ' +wp
+                #print getscaletuple(cat,wp,massbins[part][i])
                 cent,stat,sysup,sysdown = getscaletuple(cat,wp,massbins[part][i])
                 #print massbins[part][i]
                 #print ranges['w1']
@@ -144,8 +161,26 @@ for part in particles:
                 graphs[(cat,wp,'syst','unconstr')].SetPointError(i,(ranges[massbins[part][i]][1]-ranges[massbins[part][i]][0])/2.,(ranges[massbins[part][i]][1]-ranges[massbins[part][i]][0])/2.,sysup,sysdown)
                 graphs[(cat,wp,'nom','unconstr')].SetPoint(i,(ranges[massbins[part][i]][1]+ranges[massbins[part][i]][0])/2. , cent )
                 graphs[(cat,wp,'nom','unconstr')].SetPointError(i,(ranges[massbins[part][i]][1]-ranges[massbins[part][i]][0])/2.,(ranges[massbins[part][i]][1]-ranges[massbins[part][i]][0])/2.,0,0)
-            
-   
+                
+                sup=round(math.sqrt(sysup*sysup-stat*stat),2)
+                if sup==0.0:
+                    sup='<0.01'
+                else:
+                    sup='{:.02f}'.format(sup)
+                sdo=round(math.sqrt(sysdown*sysdown-stat*stat),2)                
+                if sdo==0.0:
+                    sdo='<0.01'
+                else:
+                    sdo='{:.02f}'.format(sdo)
+                sta=round(stat,2)
+                if sta==0.0:
+                    sta='<0.01'
+                else:
+                    sta='{:.02f}'.format(sta)
+                    
+                print '&','{:.02f}'.format(round(cent,2)),'&$\\pm$&',sta,'&$^+_-$&$^{',sup,'}_{',sdo,'}$',
+            print "\\\\"
+                
             mainhist.Draw()
         
         
@@ -155,3 +190,6 @@ for part in particles:
             lineinc.DrawLine(ptminmax[part][0],inclusive_cent,ptminmax[part][1],inclusive_cent)
             canvas.SaveAs(cat+'_'+wp+'.pdf')
             canvas.SaveAs(cat+'_'+wp+'.png')
+
+        print '\\end{tabular}'
+        print
