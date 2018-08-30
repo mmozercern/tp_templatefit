@@ -45,7 +45,8 @@ def imp(w_):
   return getattr(w_,'import')
 
 plot_labels = {
-    'jer' : 'JER smeared',
+    'jer_up' : 'JER Up',
+    'jer_down' : 'JER Down',
     'jes_up' : 'JES Up',
     'jes_down' : 'JES Down',
     'qscale_up' : 'Q^2 scale Up',
@@ -63,7 +64,15 @@ plot_labels = {
     'mergeUp' : 'Merging radius Up',
     'mergeDown' : 'Merging radius Down',
     'cent' : 'Nominal',
-    'herwig' : 'alternative shower'
+    'herwig' : 'alternative shower',
+    'truePUWeight__up': 'PU up',
+    'muEffWeight__up':'muon eff. up',
+    'btagWeight_HEAVY_up': 'btag scale (heavy, up)',
+    'btagWeight_LIGHT_up': 'btag scale (light, up)',
+    'truePUWeight__down':'PU down',
+    'muEffWeight__down':'muon eff. down',
+    'btagWeight_HEAVY_down':'btag scale (heavy, down)',
+    'btagWeight_LIGHT_down':'btag scale (light, down)'
     }
 
 plot_postfix = ''

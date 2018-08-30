@@ -6,7 +6,7 @@ ROOT.gROOT.SetBatch(True)
 
 ROOT.gErrorIgnoreLevel=ROOT.kError
 
-WPs = ['loose','medium','tight','very_tight']
+WPs = ['loose','medium','tight','very_tight','50p']
 particles = ['w','t']
 categories = {'t':['fj_nn_top','fj_decorr_nn_top'],
               'w':['fj_nn_w','fj_decorr_nn_w']
@@ -17,21 +17,25 @@ constraints = ['N']
 cutvals = { 'fj_nn_top' : {'loose':'0.1883',
                            'medium':'0.8511',
                            'tight':'0.9377',
+                           '50p':'0.9251',
                            'very_tight':'0.9897'
                            },
             'fj_decorr_nn_top':{ 'loose':'0.04738',
                                  'medium':'0.4585',
                                  'tight':'0.6556',
+                                 '50p':'0.3452',
                                  'very_tight':'0.8931',
                                  },
             'fj_nn_w':{ 'loose':'0.1491',
                         'medium':'0.8767',
                         'tight':'0.953',
+                        '50p':'0.9838',
                         'very_tight':'0.9928',
                         },
             'fj_decorr_nn_w':{ 'loose':'0.07203',
                                'medium':'0.4633',
                                'tight':'0.6482',
+                               '50p':'0.6654',
                                'very_tight':'0.8936',
                                },
 
@@ -39,7 +43,7 @@ cutvals = { 'fj_nn_top' : {'loose':'0.1883',
 
 massvar ={ 'puppisd'   : 'fj_jmarcorr_sdmass'}
 
-syserrs = ['Resolution','ScaleUp','ScaleDown','qscale_up','qscale_down','pdf_up','pdf_down','herwig']
+syserrs = ['pdf_up','pdf_down','qscale_up','qscale_down','truePUWeight__up','muEffWeight__up','btagWeight_HEAVY_up','btagWeight_LIGHT_up','truePUWeight__down','muEffWeight__down','btagWeight_HEAVY_down','btagWeight_LIGHT_down','jer_up',"jer_down",'ScaleUp','ScaleDown','herwig']
 
 constraintvals = { 'N': ['0']}
 
@@ -61,7 +65,7 @@ ranges={ 't1':[300,400],
          }
 
 
-dirprefix='20180517_nn_ak8/fj_jmarcorr_sdmass/TREE/'
+dirprefix='20180609X_nn_ak8/fj_jmarcorr_sdmass/TREE/'
 
 
 ptminmax = { 't': [300,1200],
@@ -108,13 +112,13 @@ def getscaletuple(cat,wp,ptrange):
     
 
 lineinc = ROOT.TLine()
+graphs={}
 for part in particles:
 
     mainhist = ROOT.TH1F('main','main',1,ptminmax[part][0],ptminmax[part][1])
     mainhist.SetMinimum(0.)
     mainhist.SetMaximum(2.)
    
-    graphs={}
     
     canvas = ROOT.TCanvas("c2","c2",50,50,600,600)
 
@@ -145,8 +149,11 @@ for part in particles:
 
         #scale factor
             graphs[(cat,wp,'stat','unconstr')]=ROOT.TGraphAsymmErrors(len(massbins[part]))
+            graphs[(cat,wp,'stat','unconstr')].SetName(cat+wp+'stat')
             graphs[(cat,wp,'syst','unconstr')]=ROOT.TGraphAsymmErrors(len(massbins[part]))
+            graphs[(cat,wp,'syst','unconstr')].SetName(cat+wp+'syst')
             graphs[(cat,wp,'nom','unconstr')]=ROOT.TGraphAsymmErrors(len(massbins[part]))
+            graphs[(cat,wp,'nom','unconstr')].SetName(cat+wp+'nom')
             graphs[(cat,wp,'stat','unconstr')].SetFillColor(ROOT.kOrange)
             graphs[(cat,wp,'syst','unconstr')].SetFillColor(ROOT.kOrange-3)
             for i in xrange(len(massbins[part])):
@@ -182,8 +189,7 @@ for part in particles:
             print "\\\\"
                 
             mainhist.Draw()
-        
-        
+                    
             graphs[(cat,wp,'syst','unconstr')].Draw('same 2')
             graphs[(cat,wp,'stat','unconstr')].Draw('same 2')
             graphs[(cat,wp,'nom','unconstr')].Draw('same Z')
@@ -193,3 +199,8 @@ for part in particles:
 
         print '\\end{tabular}'
         print
+
+outf = ROOT.TFile.Open('SF.root',"RECREATE")
+for graph in graphs:
+    graphs[graph].Write()
+outf.Close()

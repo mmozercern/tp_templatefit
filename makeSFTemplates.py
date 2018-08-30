@@ -57,10 +57,9 @@ elif args.sel=='photon':
   label = 'photon_'
 else:
   #cut = ' efnl1_ak8pt > 250 && nvetolep<2 && passtriglepOR>0 && passmetfilters>0 && efnl1_leptonicwpt>250 '
-  cut = ' fj_pt > 250 && nvetolep<2 && passtriglepOR>0 && passmetfilters>0 && ptlepmet>250 '
-  if '_w' in args.disc:
-    cut = ' fj_pt > 200 && nvetolep<2 && passtriglepOR>0 && passmetfilters>0 && ptlepmet>250 '
-  weight = '%f*weight*truePUWeight*btagWeight*topptWeight'%(lumi)
+  #cut = ' fj_pt > 250 && nvetolep<2 && passtriglepOR>0 && passmetfilters>0 && ptlepmet>250 '
+  cut = 'passjson && passmetfilters && passtrigMu24 && leptonpt>45 && met>50 && ptlepmet>250 && lep_dPhi_b<2 && ((process==1 && event!=12427454) || (process!=1))'
+  weight = '%f*weight*truePUWeight*btagWeight*topptWeight*muEffWeight'%(lumi)
   label = 'tag_'
 
 disclabels = {
@@ -209,7 +208,7 @@ if args.sel=='photon':
   qcd.AddFile(basedir+'QCD.root')
 else:
   data.AddFile(basedir+'singlemu_tree.root') 
-  data.AddFile(basedir+'met_tree.root') 
+  #data.AddFile(basedir+'met_tree.root') 
   if args.shower.upper()=='HERWIG':
     prong1.AddFile(basedir+'prong1.root')
     prong2.AddFile(basedir+'prong2_Herwig.root')
@@ -234,10 +233,9 @@ else:
       prong2.AddFile(basedir+'ttbar_tree.root')
       prong3.AddFile(basedir+'ttbar_tree.root')
     else:
-      ttbd=basedir.replace('lep','lep_syst')
-      prong1.AddFile(ttbd+'ttbar-powheg-herwigpp_tree.root')
-      prong2.AddFile(ttbd+'ttbar-powheg-herwigpp_tree.root')
-      prong3.AddFile(ttbd+'ttbar-powheg-herwigpp_tree.root')     
+      prong1.AddFile(basedir+'ttbar-powheg-herwigpp_tree.root')
+      prong2.AddFile(basedir+'ttbar-powheg-herwigpp_tree.root')
+      prong3.AddFile(basedir+'ttbar-powheg-herwigpp_tree.root')     
     prong1.AddFile(basedir+'wjets-nlo_tree.root')
     prong2.AddFile(basedir+'wjets-nlo_tree.root')
     prong3.AddFile(basedir+'wjets-nlo_tree.root')
@@ -258,7 +256,15 @@ for p in processes:
 if args.syst=='none':
   for weightnum in xrange(109):
     plot.AddSyst("systweights[%d]"%(weightnum),"systweights[%d]"%(weightnum), "systweights[%d]"%(weightnum))
-  
+  plot.AddSyst("truePUWeight_UP","truePUWeight_UP","truePUWeight_UP")
+  plot.AddSyst("truePUWeight_DOWN","truePUWeight_DOWN","truePUWeight_DOWN")
+  plot.AddSyst("muEffWeight_UP","muEffWeight_UP","muEffWeight_UP")
+  plot.AddSyst("muEffWeight_DOWN","muEffWeight_DOWN","muEffWeight_DOWN")
+  plot.AddSyst("btagWeight_HEAVYUP","btagWeight_HEAVYUP","btagWeight_HEAVYUP")
+  plot.AddSyst("btagWeight_HEAVYDOWN","btagWeight_HEAVYDOWN","btagWeight_HEAVYDOWN")
+  plot.AddSyst("btagWeight_LIGHTUP","btagWeight_LIGHTUP","btagWeight_LIGHTUP")
+  plot.AddSyst("btagWeight_LIGHTDOWN","btagWeight_LIGHTDOWN","btagWeight_LIGHTDOWN")
+
 
 
 plot.AddDistribution(root.Distribution(args.massvar,binlow,binhigh,binnr,'M_jet [GeV]','Events/%f GeV'%((binhigh-binlow)/binnr)))

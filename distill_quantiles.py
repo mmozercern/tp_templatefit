@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 from os import system,mkdir,getenv,path,getcwd
 import argparse
-from sys import argv
+from sys import argv,exit
 
 parser = argparse.ArgumentParser(description='fit stuff')
 parser.add_argument('--indir',metavar='indir',type=str)
 parser.add_argument('--var',metavar='var',type=str,default='efnl1_ak8_nn_top')
 parser.add_argument('--masstag',metavar='masstag',type=str,default='efnl1_ak8mass')
 parser.add_argument('--indices',metavar='indices',type=str,default='1,2,3,4,6,8') # comaa-separted list or X-Y
-parser.add_argument('--type',metavar='type',type=str,default='envelope') # envelope or quantile
+parser.add_argument('--type',metavar='type',type=str,default='envelope') # envelope or quantile or updown
 parser.add_argument('--nametag',metavar='nametag',type=str,default='qscale')
 args = parser.parse_args()
 basedir = args.indir
@@ -21,7 +21,6 @@ root.gROOT.SetBatch(True)
 errnums=[]
 if "," in args.indices:
     errnums = [int(item) for item in args.indices.split(',')]
-
 if "-" in args.indices:
     errnums = range( int(args.indices.split('-')[0]), int(args.indices.split('-')[1])+1)
 print errnums
@@ -29,6 +28,35 @@ print errnums
 
 procs=['1-prong','2-prong','3-prong']
 cats=['pass','fail']
+
+
+if args.type=="updown":
+    #other weight sfs
+    for cat in cats:
+        inf  = root.TFile(basedir+'tag_%s_%s_hists.root'%(args.var,cat),'READ')
+        outf = root.TFile(basedir+'tag_%s_%s_%s_up_hists.root'%(args.var,cat,args.nametag),"RECREATE")
+        datahist=inf.Get('h_%s_Data'%(args.masstag))
+        datahist.Write()
+        for proc in procs:
+            histoin=inf.Get('h_%s_%s_%sUP_Up'%(proc,args.masstag,args.nametag)) 
+            histoout=histoin.Clone('h_%s_%s'%(args.masstag,proc))
+            histoout.Write()
+        inf.Close()
+        outf.Close()
+    for cat in cats:
+        inf  = root.TFile(basedir+'tag_%s_%s_hists.root'%(args.var,cat),'READ')
+        #print basedir+'tag_%s_%s_%s_down_hists.root'%(args.var,cat,args.nametag)
+        outf = root.TFile(basedir+'tag_%s_%s_%s_down_hists.root'%(args.var,cat,args.nametag),"RECREATE")
+        datahist=inf.Get('h_%s_Data'%(args.masstag))
+        datahist.Write()
+        for proc in procs:
+            histoin=inf.Get('h_%s_%s_%sDOWN_Up'%(proc,args.masstag,args.nametag))
+            histoout=histoin.Clone('h_%s_%s'%(args.masstag,proc))
+            histoout.Write()
+        inf.Close()
+        outf.Close()
+    exit(0)
+
 
 for cat in cats:
     inf  = root.TFile(basedir+'tag_%s_%s_hists.root'%(args.var,cat),'READ')
