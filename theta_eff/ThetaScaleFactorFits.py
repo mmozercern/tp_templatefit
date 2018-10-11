@@ -11,7 +11,7 @@ sys.path.append('./')
 from PostFitUncertainties import *
 from PostFitCorrelations import *
 from SFcalculation import *
-#postifrom ThetaPostFitPlot import *
+from ThetaPostFitPlot import *
 
 
 def run(fname_stat, fname_sys, outname_stat, outname_sys, calc_sfs = True, write_report = False):
@@ -30,9 +30,11 @@ def run(fname_stat, fname_sys, outname_stat, outname_sys, calc_sfs = True, write
     print fname_sys
     print '================================================='
 
-    rate_unc_high = math.log(1.0)
-    rate_unc_low = math.log(1.0)
-
+    # assume 100% norm uncertainty
+    rate_unc_high = math.log(2.0)
+    rate_unc_low = math.log(2.0)
+   
+    # keep these constraints. If they are not added, rates are assumed fixed
     model_stat.add_lognormal_uncertainty('3-prong_Pass_rate', rate_unc_low , procname='tn_3-prong',obsname='fj_jmarcorr_sdmass_pass')
     model_stat.add_lognormal_uncertainty('2-prong_Pass_rate',  rate_unc_high, procname='tn_2-prong',obsname='fj_jmarcorr_sdmass_pass')
     model_stat.add_lognormal_uncertainty('1-prong_Pass_rate', rate_unc_high , procname='tn_1-prong',obsname='fj_jmarcorr_sdmass_pass')
@@ -40,7 +42,6 @@ def run(fname_stat, fname_sys, outname_stat, outname_sys, calc_sfs = True, write
     model_sys.add_lognormal_uncertainty('3-prong_Pass_rate', rate_unc_low , procname='tn_3-prong',obsname='fj_jmarcorr_sdmass_pass')
     model_sys.add_lognormal_uncertainty('2-prong_Pass_rate',  rate_unc_high, procname='tn_2-prong',obsname='fj_jmarcorr_sdmass_pass')
     model_sys.add_lognormal_uncertainty('1-prong_Pass_rate', rate_unc_high , procname='tn_1-prong',obsname='fj_jmarcorr_sdmass_pass')
-
 
     model_stat.add_lognormal_uncertainty('3-prong_Fail_rate', rate_unc_high, procname='tn_3-prong',obsname='fj_jmarcorr_sdmass_fail')
     model_stat.add_lognormal_uncertainty('2-prong_Fail_rate', rate_unc_low, procname='tn_2-prong',obsname='fj_jmarcorr_sdmass_fail')
@@ -62,20 +63,19 @@ def run(fname_stat, fname_sys, outname_stat, outname_sys, calc_sfs = True, write
     print '============'
     print 'stat'
     print '============'
-    mle_output_stat = mle(model_stat, input='data', n=100, with_covariance=True, chi2=True, options=options, signal_process_groups ={'background_only':[]})
+    mle_output_stat = mle(model_stat, input='data', n=500, with_covariance=True, chi2=True, options=options, signal_process_groups ={'background_only':[]})
     print '============'
     print 'sys'
     print '============'
-    mle_output_sys = mle(model_sys, input='data', n=100, with_covariance=True, chi2=True, options=options, signal_process_groups ={'background_only':[]})
+    mle_output_sys = mle(model_sys, input='data', n=500, with_covariance=True, chi2=True, options=options, signal_process_groups ={'background_only':[]})
 
-    #PlotPostFitCorrelations(model_stat, mle_output_stat['background_only'], "fitResultsNewSYS/nuissance/Corr_"+n_name_stat)
-    #PlotPostFitCorrelations(model_sys, mle_output_sys['background_only'], "fitResultsNewSYS/nuissance/Corr_"+n_name_sys)
+
+    PlotPostFitCorrelations(model_stat, mle_output_stat['background_only'], "fitResultsNewSYS/nuissance/Corr_"+n_name_stat)
+    PlotPostFitCorrelations(model_sys, mle_output_sys['background_only'], "fitResultsNewSYS/nuissance/Corr_"+n_name_sys)
    
     writeOutputFile(inputpath+fname_stat,  "fitResultsNewSYS/mass_sub/"+outname_stat, mle_output_stat['background_only'], model_stat)
     writeOutputFile(inputpath+fname_sys,  "fitResultsNewSYS/mass_sub/"+outname_sys, mle_output_sys['background_only'], model_sys)
 
-    #writeOutputFile("thetaFilesNew+fname,  "fitResultsNewSYS/pt/"+outname, mle_output['background_only'], model, False)
-    #writeOutputFile("thetaFilesNewSYS/tau32/"+fname,  "fitResultsNewSYS/tau32/"+outname, mle_output['background_only'], model, False)
     
     if calc_sfs:
         sfs = SFcalculation(inputpath+fname_stat, inputpath+fname_sys, mle_output_stat['background_only'], mle_output_sys['background_only'], model_stat, model_sys)
@@ -84,7 +84,7 @@ def run(fname_stat, fname_sys, outname_stat, outname_sys, calc_sfs = True, write
             sfs.setMassWindow(105,210)
         else:
             sfs.setMassWindow(65,105)
-
+            
         dictOut_stat = sfs.calcEfficiencies('stat')
         dictOut_sys = sfs.calcEfficiencies('sys')
     
@@ -95,11 +95,14 @@ def run(fname_stat, fname_sys, outname_stat, outname_sys, calc_sfs = True, write
 #            del pf_vals['__nll']
 #            del pf_vals['__cov']
      
-#        postfit_stat = ThetaPostFitPlot(mle_output_stat)
-#        postfit_stat.make_plots("fitResultsNewSYS/nuissance/",n_name_stat)
 
-#       postfit_sys = ThetaPostFitPlot(mle_output_sys)
-#       postfit_sys.make_plots("fitResultsNewSYS/nuissance/",n_name_sys)
+        print "XXX"
+        postfit_stat = ThetaPostFitPlot(mle_output_stat)
+        postfit_stat.make_plots("fitResultsNewSYS/nuissance/",n_name_stat)
+
+        postfit_sys = ThetaPostFitPlot(mle_output_sys)
+        postfit_sys.make_plots("fitResultsNewSYS/nuissance/",n_name_sys)
+        print "YYY"
 
         return [dictOut_stat, dictOut_sys]
 
@@ -110,13 +113,12 @@ def run(fname_stat, fname_sys, outname_stat, outname_sys, calc_sfs = True, write
 bins = array('d', [300, 400, 480, 600, 1200])
 calculate_scaleFactors = True
 
-#run("thetaFile_400_PUPPI_sys_.root", "Hists_400_PUPPI_sys.root")
 
 wps = ["loose","medium","tight","50p"]
 
 
 categories = { 't':['fj_nn_top','fj_decorr_nn_top'],
-               'w':['fj_decorr_nn_w'] #['fj_nn_w','fj_decorr_nn_w']
+               'w':['fj_nn_w','fj_decorr_nn_w']
                }
 
 massbins={'t':['t1','t2','t3','t4'],
@@ -132,7 +134,7 @@ ranges={ 't1':[300,400],
          'w3':[400,800],
          }
 
-for part in ['w']: #['t','w']:
+for part in ['t','w']:
     for cat in categories[part]:
         for wp in wps: 
 
@@ -149,7 +151,7 @@ for part in ['w']: #['t','w']:
                 dicts_stat.append(res[0])
                 dicts_sys.append(res[1])
 
-            print bins
+            #print bins
             print dicts_stat
             print dicts_sys
 

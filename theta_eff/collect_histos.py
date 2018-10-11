@@ -41,9 +41,11 @@ cutvals = { 'fj_nn_top' : {'loose':'0.1883',
 massvar ='fj_jmarcorr_sdmass'
 
 
-syserrs = ['pdf','qscale','truePUWeight_','muEffWeight_','btagWeight_HEAVY','btagWeight_LIGHT','jer','jes']#'herwig']
+syserrs = ['pdf','qscale','truePUWeight_','muEffWeight_','btagWeight_HEAVY','btagWeight_LIGHT','jer','jes']
+#systematic uncertainties where proper templates exist for both variations
 
 onesideds = ['herwig']
+#systematic uncertainties with only a asingle variation
 
 massbins={'t':['paperinct','t1','t2','t3','t4'],
           'w':['paperincw','w1','w2','w3']
@@ -51,6 +53,12 @@ massbins={'t':['paperinct','t1','t2','t3','t4'],
 
 udtrans={'up':'plus',
         'down':'minus'}
+
+
+def remove_negatives(histo):# negative template entries due to NLO weights make theta crash => set them to zero
+    while histo.GetMinimum() < 0:
+        #print "found negative bin " , histo.GetMinimum()
+        histo.SetBinContent(histo.GetMinimumBin(),0.001)
 
 for part in particles:
     for cat in categories[part]:
@@ -69,27 +77,28 @@ for part in particles:
                 for pf in ['pass','fail']:
                 #nominal:
                     inf=ROOT.TFile.Open(prefix+'/%s/TREE/%s_%s/%s/tag_%s_%s_hists.root'%(massvar,cat,cutvals[cat][wp],bin,cat,pf))
-                    data = inf.Get('h_%s_Data'%(massvar))
+                    data = inf.Get('h_%s_Data'%(massvar)).Clone('%s_%s__DATA'%(massvar,pf))
                     outf.cd()
-                    data.Write('%s_%s__DATA'%(massvar,pf))
+                    data.Write()
                     outfstat.cd()
-                    data.Write('%s_%s__DATA'%(massvar,pf))
+                    data.Write()
                     outfunsc.cd()
-                    data.Write('%s_%s__DATA'%(massvar,pf))
+                    data.Write()
                     outfstatunsc.cd()
-                    data.Write('%s_%s__DATA'%(massvar,pf))
+                    data.Write()
                     
                     for prong in ['1-prong','2-prong','3-prong']:
-                        tmph = inf.Get('h_%s_%s'%(massvar,prong))
+                        tmph = inf.Get('h_%s_%s'%(massvar,prong)).Clone('%s_%s__%s'%(massvar,pf,prong))
+                        remove_negatives(tmph)
                         normmap[(pf,prong)]=tmph.Integral(0,tmph.GetNbinsX()+1)
                         outf.cd()
-                        tmph.Write('%s_%s__%s'%(massvar,pf,prong))
+                        tmph.Write()
                         outfstat.cd()
-                        tmph.Write('%s_%s__%s'%(massvar,pf,prong))
+                        tmph.Write()
                         outfunsc.cd()
-                        tmph.Write('%s_%s__%s'%(massvar,pf,prong))
+                        tmph.Write()
                         outfstatunsc.cd()
-                        tmph.Write('%s_%s__%s'%(massvar,pf,prong))
+                        tmph.Write()
                     inf.Close()
                    
                 for syst in syserrs:
@@ -103,14 +112,16 @@ for part in particles:
                             adjustedsys=syst
 
                         for prong in ['1-prong','2-prong','3-prong']:
-                            tmphp = infp.Get('h_%s_%s'%(massvar,prong))
-                            tmphf = inff.Get('h_%s_%s'%(massvar,prong))
+                            tmphp = infp.Get('h_%s_%s'%(massvar,prong)).Clone('%s_%s__%s__%s__%s'%(massvar,'pass',prong,adjustedsys,udtrans[ud]))
+                            tmphf = inff.Get('h_%s_%s'%(massvar,prong)).Clone('%s_%s__%s__%s__%s'%(massvar,'fail',prong,adjustedsys,udtrans[ud]))
+                            remove_negatives(tmphp)
+                            remove_negatives(tmphf)                            
                             scalefac = (normmap[('pass',prong)]+normmap[('fail',prong)])/(tmphf.Integral(0,tmphf.GetNbinsX()+1) + tmphp.Integral(0,tmphp.GetNbinsX()+1))
                             tmphp.Scale(scalefac)
                             tmphf.Scale(scalefac)
                             outf.cd()
-                            tmphp.Write('%s_%s__%s__%s__%s'%(massvar,'pass',prong,adjustedsys,udtrans[ud]))
-                            tmphf.Write('%s_%s__%s__%s__%s'%(massvar,'fail',prong,adjustedsys,udtrans[ud]))
+                            tmphp.Write()
+                            tmphf.Write()
                         inff.Close()
                         infp.Close()
 
@@ -122,24 +133,28 @@ for part in particles:
                     infnomf = ROOT.TFile.Open(prefix+'/%s/TREE/%s_%s/%s/tag_%s_%s_hists.root'%(massvar,cat,cutvals[cat][wp],bin,cat,'fail'))
 
                     for prong in ['1-prong','2-prong','3-prong']:
-                        tmphp = infp.Get('h_%s_%s'%(massvar,prong))
-                        tmphf = inff.Get('h_%s_%s'%(massvar,prong))
+                        tmphp = infp.Get('h_%s_%s'%(massvar,prong)).Clone('%s_%s__%s__%s__%s'%(massvar,'pass',prong,syst,udtrans['up']))
+                        tmphf = inff.Get('h_%s_%s'%(massvar,prong)).Clone('%s_%s__%s__%s__%s'%(massvar,'fail',prong,syst,udtrans['up']))
+                        remove_negatives(tmphp)
+                        remove_negatives(tmphf)                            
                         scalefac = (normmap[('pass',prong)]+normmap[('fail',prong)])/(tmphf.Integral(0,tmphf.GetNbinsX()+1) + tmphp.Integral(0,tmphp.GetNbinsX()+1))
                         tmphp.Scale(scalefac)
                         tmphf.Scale(scalefac)
                         outf.cd()
-                        tmphp.Write('%s_%s__%s__%s__%s'%(massvar,'pass',prong,syst,udtrans['up']))
-                        tmphf.Write('%s_%s__%s__%s__%s'%(massvar,'fail',prong,syst,udtrans['up']))
+                        tmphp.Write()
+                        tmphf.Write()
 
-                        tmphnomp = infnomp.Get('h_%s_%s'%(massvar,prong)) 
-                        tmphnomf = infnomf.Get('h_%s_%s'%(massvar,prong)) 
+                        tmphnomp = infnomp.Get('h_%s_%s'%(massvar,prong)).Clone('%s_%s__%s__%s__%s'%(massvar,'pass',prong,syst,udtrans['down'])) 
+                        tmphnomf = infnomf.Get('h_%s_%s'%(massvar,prong)).Clone('%s_%s__%s__%s__%s'%(massvar,'fail',prong,syst,udtrans['down']))
                         tmphnomp.Scale(2.0)
                         tmphnomf.Scale(2.0)
                         tmphnomp.Add(tmphp,-1.)
                         tmphnomf.Add(tmphf,-1.)
+                        remove_negatives(tmphnomp)
+                        remove_negatives(tmphnomf)                            
                         outf.cd()
-                        tmphnomp.Write('%s_%s__%s__%s__%s'%(massvar,'pass',prong,syst,udtrans['down']))
-                        tmphnomf.Write('%s_%s__%s__%s__%s'%(massvar,'fail',prong,syst,udtrans['down']))
+                        tmphnomp.Write()
+                        tmphnomf.Write()
 
 
 

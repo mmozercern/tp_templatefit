@@ -1,0 +1,25 @@
+requirements:
+
+theta from here: https://gitlab.ekp.kit.edu/nfaltermann/theta 
+For me the branch "testing" was the right one
+
+https://github.com/UHH2/SFramePlotter for pretty plots with Torbens script
+
+These are a bit picky wrt runtime environment. 
+
+I got theta to run with CMSSW_7_1_19_patch1
+
+for the plot-scripts I use CMSSW_7_6_4
+
+
+
+scripts to run:
+collect_histos.py rejiggers all the histrograms into files/naming schemes appropriate for theta
+
+theta/utils2/theta-auto.py ThetaScaleFactorFits.py 
+runs the actual fits. It will crash if one of the fits isn't converging and needs attention.
+
+
+plotall.py runss all the plots using Torbens script
+produces one of the fit plots 
+
